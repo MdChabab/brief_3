@@ -14,6 +14,7 @@
 //  - Comment accéder au prix du 2e cours ? Au 1er créneau du 3e cours ?
 // TODO : affichez `cours` dans la console avec console.log(), puis explorez-le.
 
+console.log(cours);
 
 // ------------------------------------------------------------
 // ÉTAPE 1 : Sélectionner les éléments du DOM
@@ -25,6 +26,17 @@
 // TODO : récupérez ces éléments et rangez-les dans des constantes.
 // Question : quelle est la différence entre getElementById et querySelector ?
 
+const coursesContainer = document.getElementById('courses-container');
+const selectedCourseTitle = document.getElementById('selected-course-title');
+const slotsContainer = document.getElementById('slots-container');
+const seatsContainer = document.getElementById('seats-container');
+const summaryCourse = document.getElementById('summary-course');
+const summarySlot = document.getElementById('summary-slot');
+const summarySeats = document.getElementById('summary-seats');
+const summaryCount = document.getElementById('summary-count');
+const summaryBotal = document.getElementById('summary-total');
+const confirmButton = document.getElementById('confirm-button');
+const message = document.getElementById('message');
 
 // ------------------------------------------------------------
 // ÉTAPE 2 : État de l'application
@@ -48,6 +60,37 @@
 //  - Comment stocker l'id du cours sur la carte (indice : data-*) ?
 //  - Les template literals (`...${valeur}...`) peuvent-ils vous aider ?
 
+function displayCourses() {
+    let cards = [];
+
+    cours.forEach(cour => {
+        cards.push(`
+            <article
+                class="cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md" data-id="${cour.id}">
+                <img src="${cour.image}" alt="Visuel du cours ${cour.nom}" class="h-36 w-full object-cover" />
+                <div class="space-y-1 p-4">
+                    <span class="inline-block rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">${cour.categorie}</span>
+                    <h3 class="text-lg font-semibold text-slate-900">${cour.nom}</h3>
+                    <p class="text-sm text-slate-600">${cour.duree}, avec ${cour.coach}</p>
+                    <p class="pt-1 text-base font-bold text-slate-900">${cour.prix} €
+                        <span class="text-sm font-normal text-slate-500">par place</span>
+                    </p>
+                </div>
+            </article>
+        `);
+    });
+
+    coursesContainer.innerHTML = cards.join('');
+    let articles = coursesContainer.querySelectorAll('[data-id]');
+
+    articles.forEach(article => {
+        article.addEventListener('click', () => {
+            clickHandler(article);
+        });
+    });
+}
+
+displayCourses();
 
 // ------------------------------------------------------------
 // ÉTAPE 4 : Sélectionner un cours (US02)
@@ -61,6 +104,27 @@
 //  - Comment retrouver le cours à partir de l'id lu dans la carte ?
 //  - Que faut-il réinitialiser quand on change de cours ?
 
+let courseId = '';
+
+function clickHandler(article) {
+    courseId = article.dataset.id;
+
+    let articles = coursesContainer.querySelectorAll('[data-id]');
+
+    articles.forEach(item => {
+        item.classList.remove('ring-2', 'ring-teal-600');
+    });
+    article.classList.add('ring-2', 'ring-teal-600');
+
+    let selectedCourse = cours.find(cour => cour.id === courseId);
+    slotId = selectedCourse.creneaux[0].id;
+    selectedCourseTitle.textContent = `${selectedCourse.nom}`;
+
+    displaySlots();
+    displaySeats();
+}
+
+clickHandler(coursesContainer.querySelector('[data-id]'));
 
 // ------------------------------------------------------------
 // ÉTAPE 5 : Afficher et sélectionner un créneau (US03)
@@ -72,6 +136,45 @@
 // Questions :
 //  - Quand cette fonction doit-elle être appelée ?
 //  - Que se passe-t-il si aucun cours n'est encore sélectionné ?
+
+let slotId = '';
+
+function displaySlots() {
+    slotsContainer.innerHTML = '';
+
+    let selectedCourse = cours.find(cour => cour.id === courseId);
+
+    selectedCourse.creneaux.forEach(creneau => {
+        let style = '';
+
+        if (creneau.id === slotId) {
+            style = 'border-teal-600 bg-teal-600 text-white';
+        } else {
+            style = 'border-slate-300 bg-white text-slate-800 hover:border-teal-600';
+        }
+
+        slotsContainer.innerHTML += `
+            <button type="button"
+                class="rounded-xl border px-4 py-2 text-sm font-medium transition ${style}"
+                data-id="${creneau.id}">
+
+                ${creneau.jour}
+                <span class="font-normal">${creneau.heure}</span>
+            </button>
+        `;
+    });
+
+    let buttons = slotsContainer.querySelectorAll('[data-id]');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            slotId = button.dataset.id;
+
+            displaySlots();
+            displaySeats();
+        });
+    });
+}
 
 
 // ------------------------------------------------------------
@@ -86,6 +189,37 @@
 //  - Comment savoir si un emplacement est dans la liste des occupés (includes) ?
 //  - Faut-il une boucle imbriquée ? Pourquoi ?
 
+function displaySeats() {
+    seatsContainer.innerHTML = '';
+
+    let selectedCourse = cours.find(cour => cour.id === courseId);
+    let selectedSlot = selectedCourse.creneaux.find(creneau => creneau.id === slotId);
+
+    rangees.forEach(rangee => {
+        for (let i = 1; i <= tapisParRangee; i++) {
+            let seatId = rangee + i;
+            let occupied = selectedSlot.occupes.includes(seatId);
+            let style = '';
+
+            if (occupied) {
+                style = 'cursor-not-allowed bg-slate-300 text-slate-500';
+            } else {
+                style = 'border border-slate-300 bg-white text-slate-700 hover:border-teal-600';
+            }
+
+            seatsContainer.innerHTML += `
+                <button type="button"
+                    class="seat h-11 rounded-lg text-xs font-semibold transition ${style}"
+                    data-id="${seatId}"
+                    ${occupied ? 'disabled' : ''}
+                    aria-label="Tapis ${seatId} ${occupied ? 'occupé' : 'libre'}">
+
+                    ${seatId}
+                </button>
+            `;
+        }
+    });
+}
 
 // ------------------------------------------------------------
 // ÉTAPE 7 : Sélectionner / désélectionner des emplacements (US05)
@@ -130,7 +264,6 @@
 // TODO : au chargement, sélectionnez par défaut le premier cours
 //  et affichez toute l'interface à partir des données.
 // Question : dans quel ordre faut-il appeler vos fonctions ?
-
 
 // ------------------------------------------------------------
 // BONUS (Partie 2 : page « Mes réservations »)
