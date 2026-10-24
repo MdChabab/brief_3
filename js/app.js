@@ -60,6 +60,8 @@ const message = document.getElementById('message');
 //  - Comment stocker l'id du cours sur la carte (indice : data-*) ?
 //  - Les template literals (`...${valeur}...`) peuvent-ils vous aider ?
 
+let courseId = '';
+
 function displayCourses() {
     let cards = [];
 
@@ -104,8 +106,6 @@ displayCourses();
 //  - Comment retrouver le cours à partir de l'id lu dans la carte ?
 //  - Que faut-il réinitialiser quand on change de cours ?
 
-let courseId = '';
-
 function clickHandler(article) {
     courseId = article.dataset.id;
 
@@ -123,8 +123,6 @@ function clickHandler(article) {
     displaySlots();
     displaySeats();
 }
-
-clickHandler(coursesContainer.querySelector('[data-id]'));
 
 // ------------------------------------------------------------
 // ÉTAPE 5 : Afficher et sélectionner un créneau (US03)
@@ -220,6 +218,8 @@ function displaySeats() {
         }
     });
 }
+
+clickHandler(coursesContainer.querySelector('[data-id]'));
 
 // ------------------------------------------------------------
 // ÉTAPE 7 : Sélectionner / désélectionner des emplacements (US05)
